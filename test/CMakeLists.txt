@@ -14,4 +14,4 @@ set(SOURCE_FILES
 
 include_directories("${PROJECT_SOURCE_DIR}" "${PROJECT_SOURCE_DIR}/../include")
 
-add_executable(tests main.cpp test_nodes.cpp "${SOURCE_FILES}")
+add_executable(libnodes-tests main.cpp test_nodes.cpp "${SOURCE_FILES}")
