@@ -440,7 +440,7 @@ template<
         typename I = typename Ti::type,
         typename O = typename To::type
 >
-inline const Ti &operator>>( To &outlet, Ti &inlet )
+inline const Ti & operator>>( To &outlet, Ti &inlet )
 {
     static_assert( std::is_same< I, O >::value, "Cannot connect outlet to inlet" );
     outlet.connect( inlet );
@@ -452,12 +452,12 @@ template<
         typename No,
         std::size_t Ii = 0,
         std::size_t Io = 0,
-        typename Ti = typename Ni::template outlet_type< Ii >::type,
-        typename To = typename No::template inlet_type< Io >::type
+        typename To = typename Ni::template outlet_type< Ii >::type,
+        typename Ti = typename No::template inlet_type< Io >::type
 >
-inline const ref< No > &operator>>( const ref< Ni > &input, const ref< No > &output )
+inline const ref< No > & operator>>( const ref< Ni > &input, const ref< No > &output )
 {
-    static_assert( std::is_same< Ti, To >::value, "Cannot connect input to output" );
+    static_assert( std::is_same< To, Ti >::value, "Cannot connect input to output" );
     input->template out< Ii >() >> output->template in< Io >();
     return output;
 }
@@ -467,16 +467,29 @@ template<
         typename No,
         std::size_t Ii = 0,
         std::size_t Io = 0,
-        typename Ti = typename Ni::template outlet_type< Ii >::type,
-        typename To = typename No::template inlet_type< Io >::type
+        typename To = typename Ni::template outlet_type< Ii >::type,
+        typename Ti = typename No::template inlet_type< Io >::type
 >
-inline No &operator>>( Ni &input, No &output )
+inline No & operator>>( Ni &input, No &output )
 {
-    static_assert( std::is_same< Ti, To >::value, "Cannot connect input to output" );
+    static_assert( std::is_same< To, Ti >::value, "Cannot connect input to output" );
     input.template out< Ii >() >> output.template in< Io >();
     return output;
 }
 
+template<
+        typename Ni,
+        typename Ti,
+        std::size_t Ii = 0,
+        typename To = typename Ni::template outlet_type< Ii >::type,
+        typename I = typename Ti::type
+>
+inline Ti & operator>>( Ni &input, Ti &inlet )
+{
+    static_assert( std::is_same< To, I >::value, "Cannot connect input to inlet" );
+    input.template out< Ii >() >> inlet;
+    return inlet;
+}
 
 }
 

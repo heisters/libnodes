@@ -34,6 +34,72 @@ SCENARIO( "With a single node", "[nodes]" ) {
     }
 }
 
+SCENARIO( "Connecting nodes", "[nodes]" ) {
+    class IntInt_IONode : public Node< Inlets< int, int >, Outlets< int, int > > {
+    public:
+        IntInt_IONode( const string & label ) : Node< Inlets< int, int >, Outlets< int, int > >( label ) {
+            in< 0 >().onReceive( [&]( const int & i ) {
+                received0.push_back( i );
+                this->out< 0 >().update( i );
+            } );
+            in< 1 >().onReceive( [&]( const int & i ) {
+                received1.push_back( i );
+                this->out< 1 >().update( i );
+            } );
+        }
+
+        std::vector< int > received0, received1;
+    };
+
+    IntInt_IONode n1( "n1" );
+    IntInt_IONode n2( "n2" );
+
+    THEN( "the default is to connect the first in/outs" ) {
+        n1 >> n2;
+        n1.in< 0 >().receive( 1 );
+        n1.in< 1 >().receive( 2 );
+
+        REQUIRE( n1.received0.size() == 1 );
+        REQUIRE( n1.received1.size() == 1 );
+        REQUIRE( n2.received0.size() == 1 );
+        REQUIRE( n2.received1.size() == 0 );
+
+        REQUIRE( n1.received0[0] == 1 );
+        REQUIRE( n1.received1[0] == 2 );
+        REQUIRE( n2.received0[0] == 1 );
+    }
+
+    THEN( "you can connect ins and outs specifically" ) {
+        n1.out< 1 >() >> n2.in< 0 >();
+        n1.in< 0 >().receive( 1 );
+        n1.in< 1 >().receive( 2 );
+
+        REQUIRE( n1.received0.size() == 1 );
+        REQUIRE( n1.received1.size() == 1 );
+        REQUIRE( n2.received0.size() == 1 );
+        REQUIRE( n2.received1.size() == 0 );
+
+        REQUIRE( n1.received0[0] == 1 );
+        REQUIRE( n1.received1[0] == 2 );
+        REQUIRE( n2.received0[0] == 2 );
+    }
+
+    THEN( "the first outlet is always assumed" ) {
+        n1 >> n2.in< 1 >();
+        n1.in< 0 >().receive( 1 );
+        n1.in< 1 >().receive( 2 );
+
+        REQUIRE( n1.received0.size() == 1 );
+        REQUIRE( n1.received1.size() == 1 );
+        REQUIRE( n2.received0.size() == 0 );
+        REQUIRE( n2.received1.size() == 1 );
+
+        REQUIRE( n1.received0[0] == 1 );
+        REQUIRE( n1.received1[0] == 2 );
+        REQUIRE( n2.received1[0] == 1 );
+    }
+}
+
 SCENARIO( "With two connected nodes", "[nodes]" ) {
     Int_IONode n1( "label 1" );
     Int_IONode n2( "label 2" );
