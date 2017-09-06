@@ -11,6 +11,9 @@
 
 namespace nodes {
 
+//-----------------------------------------------------------------------------
+// Forward declarations
+
 template< class node_t >
 using ref = std::shared_ptr< node_t >;
 
@@ -22,6 +25,20 @@ using INodeRef = ref< INode< o_node_t > >;
 template< class T > using signal = nod::signal< T >;
 typedef nod::connection connection;
 
+template< typename out_t >
+class Outlet;
+template< typename in_t >
+class Inlet;
+
+class AnyNode;
+class NodeBase;
+class OutletBase;
+class InletBase;
+
+//-----------------------------------------------------------------------------
+// Utility base classes
+
+//! makes it illegal to copy a derived class
 struct Noncopyable
 {
 protected:
@@ -34,6 +51,8 @@ protected:
     Noncopyable &operator=( const Noncopyable & ) = delete;
 };
 
+//! provides derived classes with automatically assigned, globally unique
+//! numeric identifiers
 class HasId
 {
 public:
@@ -46,13 +65,29 @@ protected:
     uint64_t mId;
 };
 
-template< typename out_t >
-class Outlet;
 
-class AnyNode;
+//! Declares an interface for anything that acts like a node
+class NodeConcept
+{
+public:
+    virtual ~NodeConcept() = default;
 
 
-class Visitable
+    virtual uint64_t id() const = 0;
+
+    virtual void setLabel( const std::string &label ) = 0;
+    virtual std::string getLabel() const = 0;
+    virtual const std::string &label() const = 0;
+    virtual std::string &label() = 0;
+
+    virtual std::size_t num_inlets() const = 0;
+    virtual std::size_t num_outlets() const = 0;
+};
+
+//-----------------------------------------------------------------------------
+// Visitors and Visitables
+
+class VisitableBase
 {
 public:
 };
@@ -67,39 +102,47 @@ template< typename... T >
 class Visitor;
 
 template< typename T >
-class Visitor< T > : public VisitorBase
+class Visitor< T > : virtual public VisitorBase
 {
 public:
     virtual void visit( T & ) = 0;
+    virtual void visit( OutletBase &, InletBase & ) {}
 };
 
 template< typename T, typename... Ts >
-class Visitor< T, Ts... > : public Visitor< Ts... >
+class Visitor< T, Ts... > : public Visitor< T >, public Visitor< Ts... >
 {
 public:
+    using Visitor< T >::visit;
     using Visitor< Ts... >::visit;
 
     virtual void visit( T & ) = 0;
 };
 
-class AnyNode
+//! Base class for custom node visitors. T... is a list of node classes it can visit.
+template< class ... T >
+class NodeVisitor : public Visitor< T... >
 {
-    struct Concept
+public:
+};
+
+//! Makes it possible to pass and call methods upon nodes without knowing their types.
+class AnyNode : virtual public NodeConcept
+{
+    struct Concept : virtual public NodeConcept
     {
         virtual ~Concept() = default;
 
-        template< typename T >
-        T * tryCast()
-        {
-            Model< T > * m = dynamic_cast< Model< T >* >( this );
+        virtual NodeBase& get() = 0;
+        virtual const NodeBase& get() const = 0;
 
-            if ( m ) {
-                return &(*m)();
-            } else {
-                return nullptr;
-            }
+        template< typename V >
+        void accept( V & visitor )
+        {
+            acceptDispatch( &visitor );
         }
 
+        virtual void acceptDispatch( VisitorBase * ) = 0;
     };
 
     template< typename T >
@@ -107,8 +150,31 @@ class AnyNode
     {
         Model( T &n ) : node( n ) {}
 
-        T & operator()() { return node; }
-        const T & operator()() const { return node; }
+        NodeBase& get() override { return node; }
+        const NodeBase& get() const override { return node; }
+
+
+        void acceptDispatch( VisitorBase * v ) override
+        {
+            auto typedVisitor = dynamic_cast< Visitor< T >* >( v );
+            if ( typedVisitor ) {
+                node.accept( *typedVisitor );
+            } else {
+                auto genericVisitor = dynamic_cast< Visitor< NodeBase >* >( v );
+                if ( genericVisitor ) {
+                    node.accept( *genericVisitor );
+                }
+            }
+        }
+
+        uint64_t id() const override { return node.id(); }
+
+        void setLabel( const std::string &label ) override { return node.setLabel( label ); }
+        std::string getLabel() const override { return node.getLabel(); }
+        const std::string &label() const override { return node.label(); }
+        std::string &label() override { return node.label(); }
+        std::size_t num_inlets() const override { return node.num_inlets(); };
+        std::size_t num_outlets() const override { return node.num_outlets(); };
 
     private:
         T &node;
@@ -121,49 +187,31 @@ public:
     AnyNode( T &node ) :
             mConcept( new Model< T >( node )) {}
 
+    operator NodeBase& () { return mConcept->get(); }
+    operator const NodeBase& () const { return mConcept->get(); }
 
-    template< typename T >
-    T * tryCast()
-    {
-        return mConcept->tryCast< T >();
-    }
 
     template< typename V >
-    bool tryAccept( V & visitor )
+    void accept( V & visitor )
     {
-        return false;
-    };
-
-    template< typename V, typename T, typename ... Ts >
-    bool tryAccept( V & visitor )
-    {
-        T * n = tryCast< T >();
-        if ( n ) {
-            n->accept( visitor );
-            return true;
-        } else {
-            return tryAccept< V, Ts... >( visitor );
-        }
-    };
-};
-
-template< class ... T >
-class NodeVisitor : public Visitor< T... >
-{
-public:
-
-
-    bool tryVisit( AnyNode & node )
-    {
-        return node.tryAccept< NodeVisitor< T... >, T... >( *this );
+        mConcept->accept( visitor );
     }
+
+    uint64_t id() const override { return mConcept->id(); }
+
+    void setLabel( const std::string &label ) override { return mConcept->setLabel( label ); }
+    std::string getLabel() const override { return mConcept->getLabel(); }
+    const std::string &label() const override { return mConcept->label(); }
+    std::string &label() override { return mConcept->label(); }
+    std::size_t num_inlets() const override { return mConcept->num_inlets(); };
+    std::size_t num_outlets() const override { return mConcept->num_outlets(); };
 };
 
 
 
-
+//! Base class for nodes that can accept visitors. V is the class of the node itself.
 template< class V >
-class VisitableNode : public Visitable
+class VisitableNode : public VisitableBase
 {
     template< typename T >
     struct outlet_visitor
@@ -171,23 +219,44 @@ class VisitableNode : public Visitable
         T &visitor;
         outlet_visitor( T &v ) : visitor( v ) {}
 
+        template< typename To, typename Ti >
+        void visitConnection( To & o, Ti & i, long )
+        {
+        };
+
+        template< typename To, typename Ti >
+        auto visitConnection( To & o, Ti & i, int )
+        -> decltype( visitor.visit( o, i ), void() )
+        {
+            visitor.visit( o, i );
+        };
+
 
         template< typename To >
         void operator()( Outlet< To > &outlet )
         {
-            for ( auto &inlet : outlet.connections()) {
+            for ( auto &inlet : outlet.connections() ) {
+                visitConnection( outlet, inlet.get(), 0 );
+
                 auto n = inlet.get().node();
                 if ( n != nullptr ) {
-                    visitor.tryVisit( *n );
+                    n->accept( visitor );
                 }
             }
         }
     };
 
 public:
+    typedef V visitable_type;
+
     VisitableNode()
     {
         auto &_this = static_cast< V & >( *this );
+
+        _this.each_out( [&]( auto &o ) {
+            o.setNode( _this );
+        } );
+
         _this.each_in( [&]( auto &i ) {
             i.setNode( _this );
         } );
@@ -205,34 +274,52 @@ public:
     }
 };
 
+//-----------------------------------------------------------------------------
+// Inlets and Outlets
+
+//! Abstract base class for all inlets.
 //! Abstract base class for all inlets.
 class Xlet : private Noncopyable, public HasId
 {
 public:
     bool operator<( const Xlet &b ) { return mId < b.mId; }
     bool operator==( const Xlet &b ) { return mId == b.mId; }
-private:
+
+    const AnyNode *node() const { return mNode; }
+    AnyNode *node() { return mNode; }
+
+    std::size_t getIndex() const { return mIndex; }
+    const std::size_t & index() const { return mIndex; }
+
+protected:
+    template< typename T >
+    void setNode( T &node ) { mNode = new AnyNode( node ); }
+
+    void setIndex( std::size_t i ) { mIndex = i; }
+
+    template< typename Ti, typename To >
+    friend class Node;
+    template< typename V >
+    friend class VisitableNode;
+
+
+    AnyNode *mNode = nullptr;
+    std::size_t mIndex = 0;
 };
 
 
-class AbstractInlet : public Xlet
+class InletBase : public Xlet
 {
-public:
+};
 
-    template< typename T >
-    void setNode( T &node ) { mNode = new AnyNode( node ); }
-    AnyNode *node() { return mNode; }
-    const AnyNode *node() const { return mNode; }
-
-
-protected:
-    AnyNode *mNode = nullptr;
+class OutletBase : public Xlet
+{
 };
 
 //! An Inlet accepts \a in_data_ts to its receive method, and returns
 //! \a read_t from its read method.
 template< typename in_t >
-class Inlet : public AbstractInlet
+class Inlet : public InletBase
 {
 public:
     typedef in_t type;
@@ -263,15 +350,10 @@ private:
     connection_container< outlet_type > mConnections;
 };
 
-class AbstractOutlet : public Xlet
-{
-
-};
-
 //! An Outlet connects to an \a out_data_ts Inlet, and is updated with
 //! \a update_t.
 template< typename out_t >
-class Outlet : public AbstractOutlet
+class Outlet : public OutletBase
 {
 public:
     typedef out_t type;
@@ -344,6 +426,8 @@ public:
 
     inline const inlets_container_type &inlets() const { return mInlets; }
 
+    inline std::size_t num_inlets() const { return in_size; }
+
 protected:
     inlets_container_type mInlets;
 };
@@ -377,6 +461,8 @@ public:
     inline outlets_container_type &outlets() { return mOutlets; }
 
     inline const outlets_container_type &outlets() const { return mOutlets; }
+
+    inline std::size_t num_outlets() const { return out_size; }
 
 protected:
     outlets_container_type mOutlets;
@@ -412,24 +498,49 @@ class UniformOutlets : public AbstractOutlets< std::array< Outlet< T >, I > >
 public:
 };
 
-//! A node has inlets and outlets, specified by its template arguments
-template< typename Ti, typename To >
-class Node : private Noncopyable, public HasId, public Ti, public To
+class NodeBase : private Noncopyable, public HasId, virtual public NodeConcept
 {
 public:
-    Node( const std::string &label )
+    NodeBase( const std::string &label = "" )
     {
-        setLabel( label );
+        if ( label == "" ) {
+            setLabel( "node " + std::to_string( mId ) );
+        } else {
+            setLabel( label );
+        }
     }
-    Node() : Node( "node" ) {}
 
-    void setLabel( const std::string &label ) { mLabel = label + " (" + std::to_string( mId ) + ")"; }
-    std::string getLabel() const { return mLabel; }
-    const std::string &label() const { return mLabel; }
-    std::string &label() { return mLabel; }
+    uint64_t id() const override { return HasId::id(); }
+
+    void setLabel( const std::string &label ) override { mLabel = label; }
+    std::string getLabel() const override { return mLabel; }
+    const std::string &label() const override { return mLabel; }
+    std::string &label() override { return mLabel; }
 
 private:
     std::string mLabel;
+};
+
+//! A node has inlets and outlets, specified by its template arguments
+template< typename Ti, typename To >
+class Node : public NodeBase, public Ti, public To, public VisitableNode< Node< Ti, To > >
+{
+public:
+    Node( const std::string &label = "" ) : NodeBase( label )
+    {
+        size_t i = 0;
+        this->template each_in( [&]( auto & in ) {
+            in.setIndex( i++ );
+        } );
+        i = 0;
+
+        this->template each_out( [&]( auto & out ) {
+            out.setIndex( i++ );
+        } );
+    }
+
+    std::size_t num_inlets() const override { return Ti::num_inlets(); };
+    std::size_t num_outlets() const override { return To::num_outlets(); };
 };
 
 namespace operators {

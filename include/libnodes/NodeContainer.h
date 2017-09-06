@@ -180,6 +180,17 @@ void call( std::array< V, I > &a, F & fn ) {
     for ( auto &v : a ) fn( v );
 }
 
+template<
+        typename F,
+        typename V,
+        std::size_t I
+>
+void call_with_index( std::array< V, I > &a, F & fn )
+{
+    std::size_t i = 0;
+    for ( auto &v : a ) fn( v, i++ );
+}
+
 }
 }
 
