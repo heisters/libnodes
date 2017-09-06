@@ -526,6 +526,8 @@ template< typename Ti, typename To >
 class Node : public NodeBase, public Ti, public To, public VisitableNode< Node< Ti, To > >
 {
 public:
+    typedef Node< Ti, To > node_type;
+
     Node( const std::string &label = "" ) : NodeBase( label )
     {
         size_t i = 0;

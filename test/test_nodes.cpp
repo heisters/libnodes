@@ -9,7 +9,7 @@ using namespace nodes::operators;
 
 class Int_IONode : public Node< Inlets< int >, Outlets< int > > {
 public:
-    Int_IONode( const string &label ) : Node< Inlets< int >, Outlets< int > >( label ) {
+    Int_IONode( const string &label ) : node_type( label ) {
         in< 0 >().onReceive( [&]( const int &i ) {
             received.push_back( i );
             this->out< 0 >().update( i );
@@ -60,7 +60,7 @@ SCENARIO( "With an AnyNode", "[nodes]" ) {
 SCENARIO( "Connecting nodes", "[nodes]" ) {
     class IntInt_IONode : public Node< Inlets< int, int >, Outlets< int, int > > {
     public:
-        IntInt_IONode( const string & label ) : Node< Inlets< int, int >, Outlets< int, int > >( label ) {
+        IntInt_IONode( const string & label ) : node_type( label ) {
             in< 0 >().onReceive( [&]( const int & i ) {
                 received0.push_back( i );
                 this->out< 0 >().update( i );
@@ -185,7 +185,7 @@ SCENARIO( "With heterogenous nodes", "[nodes]" ) {
     class IntString_IONode
             : public Node< Inlets< int, string >, Outlets< int, string > > {
     public:
-        IntString_IONode( const string &label ) : Node< Inlets< int, string >, Outlets< int, string > >( label ) {
+        IntString_IONode( const string &label ) : node_type( label ) {
             in< 0 >().onReceive( [&]( const int &i ) {
                 receivedInts.push_back( i );
                 this->out< 0 >().update( i );
