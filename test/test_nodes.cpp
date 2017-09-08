@@ -34,6 +34,69 @@ SCENARIO( "With a single node", "[nodes]" ) {
     }
 }
 
+SCENARIO( "With a single node with uniform inlets", "[nodes]" ) {
+    class ThreeInts_IONode : public Node< UniformInlets< int, 3 >, Outlets< int > > {
+    public:
+        ThreeInts_IONode( const string & label ) : node_type( label ) {
+            each_in_with_index( [&]( auto & inlet, size_t idx ) {
+                inlet.onReceive( [&, idx]( const int & i ) {
+                    received.push_back( i );
+                    sum += i;
+                    if ( idx == ( in_size - 1 ) ) {
+                        this->out<0>().update( sum );
+                        sum = 0;
+                    }
+                });
+            });
+        }
+
+        int sum = 0;
+        std::vector< int > received;
+    };
+
+    THEN( "it sums a number of inputs" ) {
+        ThreeInts_IONode n1( "node 1" );
+        Int_IONode n2( "node 2" );
+        n1 >> n2;
+
+        n1.in< 0 >().receive( 1 );
+
+        REQUIRE( n1.received.size() == 1 );
+        REQUIRE( n2.received.size() == 0 );
+
+        n1.in< 1 >().receive( 10 );
+
+        REQUIRE( n1.received.size() == 2 );
+        REQUIRE( n2.received.size() == 0 );
+
+        n1.in< 2 >().receive( 100 );
+
+        REQUIRE( n1.received.size() == 3 );
+        REQUIRE( n2.received.size() == 1 );
+
+        REQUIRE( n1.received[0] == 1 );
+        REQUIRE( n1.received[1] == 10 );
+        REQUIRE( n1.received[2] == 100 );
+        REQUIRE( n2.received[0] == 111 );
+    }
+
+    THEN( "it can take inputs from other nodes" ) {
+        Int_IONode n1( "node 1" );
+        ThreeInts_IONode n2( "node 2" );
+        n1 >> n2;
+        n1 >> n2.in< 1 >();
+        n1 >> n2.in< 2 >();
+
+        n1.in< 0 >().receive( 1 );
+
+        REQUIRE( n2.received.size() == 3 );
+        REQUIRE( n2.received[0] == 1 );
+        REQUIRE( n2.received[1] == 1 );
+        REQUIRE( n2.received[2] == 1 );
+    }
+
+}
+
 SCENARIO( "With an AnyNode", "[nodes]" ) {
     Int_IONode concrete( "node 1" );
     AnyNode any( (Int_IONode::visitable_type &)concrete );
