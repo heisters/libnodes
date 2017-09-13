@@ -9,7 +9,9 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(SOURCE_FILES
         "${PROJECT_SOURCE_DIR}/../include/libnodes/Node.h"
-        "${PROJECT_SOURCE_DIR}/../include/libnodes/NodeContainer.h"
+        "${PROJECT_SOURCE_DIR}/../include/libnodes/connection_container.h"
+        "${PROJECT_SOURCE_DIR}/../include/libnodes/algorithms.h"
+        "${PROJECT_SOURCE_DIR}/../include/libnodes/nod_signal.h"
         "${PROJECT_SOURCE_DIR}/../src/libnodes/Node.cpp"
         )
 set(TEST_FILES

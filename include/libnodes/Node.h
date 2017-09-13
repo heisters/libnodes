@@ -5,7 +5,8 @@
 #include <array>
 #include <type_traits>
 #include "libnodes/nod_signal.h"
-#include "libnodes/NodeContainer.h"
+#include "libnodes/connection_container.h"
+#include "libnodes/algorithms.h"
 
 #include <iostream>
 
