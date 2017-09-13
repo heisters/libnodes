@@ -11,7 +11,7 @@ using namespace nodes::operators;
 class TwoInts_IONode : public Node< Inlets< int, int >, Outlets< int, int > > {
 public:
     TwoInts_IONode( const string &label ) : node_type( label ) {
-        each_in_with_index( [&]( auto & inlet, size_t idx ) {
+        inlets().each_with_index( [&]( auto & inlet, size_t idx ) {
             inlet.onReceive( [&, idx]( const int & i ) {
                 received.push_back( i );
             });
@@ -40,7 +40,7 @@ SCENARIO( "With a single node with multiple inlets and outlets", "[nodes]" ) {
 
     THEN( "it is possible to iterate inlets" ) {
         int i = 0;
-        n.each_in( [&]( Inlet< int > & inlet ) {
+        n.inlets().each( [&]( Inlet< int > & inlet ) {
             i++;
         });
 
@@ -49,7 +49,7 @@ SCENARIO( "With a single node with multiple inlets and outlets", "[nodes]" ) {
 
     THEN( "it is possible to iterate outlets" ) {
         int i = 0;
-        n.each_out( [&]( Outlet< int > & outlet ) {
+        n.outlets().each( [&]( Outlet< int > & outlet ) {
             i++;
         });
 
@@ -59,7 +59,7 @@ SCENARIO( "With a single node with multiple inlets and outlets", "[nodes]" ) {
     THEN( "it is possible to iterate inlets with indices" ) {
         int i = 0;
         vector< size_t > indices;
-        n.each_in_with_index( [&]( Inlet< int > & inlet, size_t j ) {
+        n.inlets().each_with_index( [&]( Inlet< int > & inlet, size_t j ) {
             i++;
             indices.push_back( j );
         });
@@ -72,7 +72,7 @@ SCENARIO( "With a single node with multiple inlets and outlets", "[nodes]" ) {
     THEN( "it is possible to iterate outlets with indices" ) {
         int i = 0;
         vector< size_t > indices;
-        n.each_out_with_index( [&]( Outlet< int > & outlet, size_t j ) {
+        n.outlets().each_with_index( [&]( Outlet< int > & outlet, size_t j ) {
             i++;
             indices.push_back( j );
         });
@@ -83,7 +83,7 @@ SCENARIO( "With a single node with multiple inlets and outlets", "[nodes]" ) {
     }
 
     THEN( "it is possible to iterate inlets and outlets together" ) {
-        n.each_in_with_index( callable{ n } );
+        n.inlets().each_with_index( callable{ n } );
 
         TwoInts_IONode n2( "two" );
 
@@ -100,7 +100,7 @@ SCENARIO( "With a single node with multiple inlets and outlets", "[nodes]" ) {
 
     THEN( "it is possible to skip an inlet" ) {
         int i = 0;
-        n.each_in( [&]( Inlet< int > & inlet ) {
+        n.inlets().each( [&]( Inlet< int > & inlet ) {
             i++;
         }, index_constant< 1 >{} );
 
@@ -109,7 +109,7 @@ SCENARIO( "With a single node with multiple inlets and outlets", "[nodes]" ) {
 
     THEN( "it is possible to skip an outlet" ) {
         int i = 0;
-        n.each_out( [&]( Outlet< int > & outlet ) {
+        n.outlets().each( [&]( Outlet< int > & outlet ) {
             i++;
         }, index_constant< 1 >{} );
 

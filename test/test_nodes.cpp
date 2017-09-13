@@ -38,7 +38,7 @@ SCENARIO( "With a single node with uniform inlets", "[nodes]" ) {
     class ThreeInts_IONode : public Node< UniformInlets< int, 3 >, Outlets< int > > {
     public:
         ThreeInts_IONode( const string & label ) : node_type( label ) {
-            each_in_with_index( [&]( auto & inlet, size_t idx ) {
+            inlets().each_with_index( [&]( auto & inlet, size_t idx ) {
                 inlet.onReceive( [&, idx]( const int & i ) {
                     received.push_back( i );
                     sum += i;
@@ -206,7 +206,7 @@ SCENARIO( "With two connected nodes", "[nodes]" ) {
 
     THEN( "the inlets are iterable" ) {
         int num = 0;
-        n1.each_in( [&]( auto &i ) {
+        n1.inlets().each( [&]( auto &i ) {
             num++;
         } );
 
@@ -215,7 +215,7 @@ SCENARIO( "With two connected nodes", "[nodes]" ) {
 
     THEN( "the outlets are iterable" ) {
         int num = 0;
-        n1.each_out( [&]( auto &o ) {
+        n1.outlets().each( [&]( auto &o ) {
             num++;
         } );
 
@@ -303,7 +303,7 @@ SCENARIO( "With heterogenous nodes", "[nodes]" ) {
 
     THEN( "the inlets are iterable" ) {
         int num = 0;
-        n3.each_in( [&]( auto &i ) {
+        n3.inlets().each( [&]( auto &i ) {
             num++;
         } );
 
@@ -312,7 +312,7 @@ SCENARIO( "With heterogenous nodes", "[nodes]" ) {
 
     THEN( "the outlets are iterable" ) {
         int num = 0;
-        n3.each_out( [&]( auto &o ) {
+        n3.outlets().each( [&]( auto &o ) {
             num++;
         } );
 
@@ -321,7 +321,7 @@ SCENARIO( "With heterogenous nodes", "[nodes]" ) {
 
     THEN( "the inlets are iterable with indices" ) {
         vector< size_t > indices;
-        n3.each_in_with_index( [&]( auto &inlet, size_t i ) {
+        n3.inlets().each_with_index( [&]( auto &inlet, size_t i ) {
             indices.push_back( i );
         } );
 
@@ -332,7 +332,7 @@ SCENARIO( "With heterogenous nodes", "[nodes]" ) {
 
     THEN( "the outlets are iterable with indices" ) {
         vector< size_t > indices;
-        n3.each_out_with_index( [&]( auto &outlet, size_t i ) {
+        n3.outlets().each_with_index( [&]( auto &outlet, size_t i ) {
             indices.push_back( i );
         } );
 
@@ -351,7 +351,7 @@ SCENARIO( "With heterogenous nodes", "[nodes]" ) {
         };
 
         outlet_iterator it;
-        n3.each_out( it );
+        n3.outlets().each( it );
         REQUIRE( it.gotInt == 1 );
         REQUIRE( it.gotString == 1 );
     }

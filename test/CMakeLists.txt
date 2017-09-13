@@ -13,7 +13,7 @@ set(SOURCE_FILES
         "${PROJECT_SOURCE_DIR}/../include/libnodes/algorithms.h"
         "${PROJECT_SOURCE_DIR}/../include/libnodes/nod_signal.h"
         "${PROJECT_SOURCE_DIR}/../src/libnodes/Node.cpp"
-        )
+        ../include/libnodes/xlet_iterator.h)
 set(TEST_FILES
         "${PROJECT_SOURCE_DIR}/main.cpp"
         "${PROJECT_SOURCE_DIR}/test_nodes.cpp"

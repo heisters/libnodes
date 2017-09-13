@@ -6,7 +6,7 @@
 #include <type_traits>
 #include "libnodes/nod_signal.h"
 #include "libnodes/connection_container.h"
-#include "libnodes/algorithms.h"
+#include "libnodes/xlet_iterator.h"
 
 #include <iostream>
 
@@ -254,11 +254,11 @@ public:
     {
         auto &_this = static_cast< V & >( *this );
 
-        _this.each_out( [&]( auto &o ) {
+        _this.outlets().each( [&]( auto &o ) {
             o.setNode( _this );
         } );
 
-        _this.each_in( [&]( auto &i ) {
+        _this.inlets().each( [&]( auto &i ) {
             i.setNode( _this );
         } );
     }
@@ -271,7 +271,7 @@ public:
         visitor.visit( _this );
 
         outlet_visitor< T > ov( visitor );
-        _this.each_out( ov );
+        _this.outlets().each( ov );
     }
 };
 
@@ -279,8 +279,6 @@ public:
 // Inlets and Outlets
 
 
-template< std::size_t I >
-using index_constant = typename std::integral_constant< std::size_t, I >;
 
 
 //! Abstract base class for all inlets.
@@ -406,43 +404,38 @@ template< typename T >
 class AbstractInlets
 {
 public:
+    //! the underlying container for inlets, either a std::tuple or std::array
     typedef T inlets_container_type;
 
-    static constexpr std::size_t in_size = std::tuple_size< inlets_container_type >::value;
+    //! an iterator type for accessing the inlets
+    typedef xlet_iterator< T > inlets_iterator_type;
 
+    //! the number of inlets
+    static constexpr std::size_t in_size = inlets_iterator_type::size;
+
+    //! get the type of the inlet at index \a I
     template< std::size_t I >
-    using inlet_type = typename std::tuple_element< I, inlets_container_type >::type;
+    using inlet_type = typename inlets_iterator_type::template type< I >;
 
-    template< std::size_t I >
-    inlet_type< I > &in() { return std::get< I >( mInlets ); }
+    //! returns an iterator wrapping the inlets
+    inline inlets_iterator_type &inlets() { return mInletsIterator; }
 
-    template< std::size_t I >
-    inlet_type< I > const &in() const { return std::get< I >( mInlets ); }
+    //! returns a const iterator wrapping the inlets
+    inline const inlets_iterator_type &inlets() const { return mInletsIterator; }
 
-    template< typename F, std::size_t I = 0 >
-    void each_in( F &fn, index_constant< I > i = index_constant< 0 >{} )
-    { return algorithms::call( mInlets, fn, i ); }
-
-    template< typename F, std::size_t I = 0 >
-    void each_in_with_index( F &fn, index_constant< I > i = index_constant< 0 >{} )
-    { return algorithms::call_with_index( mInlets, fn, i ); }
-
-    template< typename F, std::size_t I = 0 >
-    void each_in( F &&fn, index_constant< I > i = index_constant< 0 >{} )
-    { return algorithms::call( mInlets, fn, i ); }
-
-    template< typename F, std::size_t I = 0 >
-    void each_in_with_index( F &&fn, index_constant< I > i = index_constant< 0 >{} )
-    { return algorithms::call_with_index( mInlets, fn, i ); }
-
-    inline inlets_container_type &inlets() { return mInlets; }
-
-    inline const inlets_container_type &inlets() const { return mInlets; }
-
+    //! returns the number of inlets at runtime
     inline std::size_t num_inlets() const { return in_size; }
 
+    //! returns a reference to the inlet at index \a I
+    template< std::size_t I >
+    inlet_type< I > & in() { return inlets().template get< I >(); }
+
+    //! returns a const reference to the inlet at index \a I
+    template< std::size_t I >
+    inlet_type< I > const & in() const { return inlets().template get< I >(); }
 protected:
     inlets_container_type mInlets;
+    inlets_iterator_type mInletsIterator{ mInlets };
 };
 
 //! Provides a common interface for hetero- and homo-geneous outlets.
@@ -450,42 +443,38 @@ template< typename T >
 class AbstractOutlets
 {
 public:
+    //! the underlying container for outlets, either a std::tuple or std::array
     typedef T outlets_container_type;
-    static constexpr std::size_t out_size = std::tuple_size< outlets_container_type >::value;
 
+    //! an iterator type for accessing the outlets
+    typedef xlet_iterator< T > outlets_iterator_type;
+
+    //! the number of outlets
+    static constexpr std::size_t out_size = outlets_iterator_type::size;
+
+    //! get the type of the outlet at index \a I
     template< std::size_t I >
-    using outlet_type = typename std::tuple_element< I, outlets_container_type >::type;
+    using outlet_type = typename outlets_iterator_type::template type< I >;
 
-    template< std::size_t I >
-    outlet_type< I > &out() { return std::get< I >( mOutlets ); }
+    //! returns an iterator wrapping the outlets
+    inline outlets_iterator_type &outlets() { return mOutletsIterator; }
 
-    template< std::size_t I >
-    outlet_type< I > const &out() const { return std::get< I >( mOutlets ); }
+    //! returns a const iterator wrapping the outlets
+    inline const outlets_iterator_type &outlets() const { return mOutletsIterator; }
 
-    template< typename F, std::size_t I = 0 >
-    void each_out( F &fn, index_constant< I > i = index_constant< 0 >{} )
-    { return algorithms::call( mOutlets, fn, i ); }
-
-    template< typename F, std::size_t I = 0 >
-    void each_out_with_index( F &fn, index_constant< I > i = index_constant< 0 >{} )
-    { return algorithms::call_with_index( mOutlets, fn, i ); }
-
-    template< typename F, std::size_t I = 0 >
-    void each_out( F &&fn, index_constant< I > i = index_constant< 0 >{} )
-    { return algorithms::call( mOutlets, fn, i ); }
-
-    template< typename F, std::size_t I = 0 >
-    void each_out_with_index( F &&fn, index_constant< I > i = index_constant< 0 >{} )
-    { return algorithms::call_with_index( mOutlets, fn, i ); }
-
-    inline outlets_container_type &outlets() { return mOutlets; }
-
-    inline const outlets_container_type &outlets() const { return mOutlets; }
-
+    //! returns the number of outlets at runtime
     inline std::size_t num_outlets() const { return out_size; }
 
+    //! returns a reference to the outlet at index \a I
+    template< std::size_t I >
+    outlet_type< I > & out() { return outlets().template get< I >(); }
+
+    //! returns a const reference to the outlet at index \a I
+    template< std::size_t I >
+    outlet_type< I > const & out() const { return outlets().template get< I >(); }
 protected:
     outlets_container_type mOutlets;
+    outlets_iterator_type mOutletsIterator{ mOutlets };
 };
 
 //! A collection of heterogeneous Inlets
@@ -551,12 +540,12 @@ public:
     Node( const std::string &label = "" ) : NodeBase( label )
     {
         size_t i = 0;
-        this->template each_in( [&]( auto & in ) {
+        this->inlets().template each( [&]( auto & in ) {
             in.setIndex( i++ );
         } );
         i = 0;
 
-        this->template each_out( [&]( auto & out ) {
+        this->outlets().template each( [&]( auto & out ) {
             out.setIndex( i++ );
         } );
     }
