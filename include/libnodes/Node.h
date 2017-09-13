@@ -277,6 +277,11 @@ public:
 //-----------------------------------------------------------------------------
 // Inlets and Outlets
 
+
+template< std::size_t I >
+using index_constant = typename std::integral_constant< std::size_t, I >;
+
+
 //! Abstract base class for all inlets.
 //! Abstract base class for all inlets.
 class Xlet : private Noncopyable, public HasId
@@ -413,14 +418,21 @@ public:
     template< std::size_t I >
     inlet_type< I > const &in() const { return std::get< I >( mInlets ); }
 
-    template< typename F >
-    void each_in( F &fn ) { return algorithms::call( mInlets, fn ); }
-    template< typename F >
-    void each_in_with_index( F &fn ) { return algorithms::call_with_index( mInlets, fn ); }
-    template< typename F >
-    void each_in( F &&fn ) { return algorithms::call( mInlets, fn ); }
-    template< typename F >
-    void each_in_with_index( F &&fn ) { return algorithms::call_with_index( mInlets, fn ); }
+    template< typename F, std::size_t I = 0 >
+    void each_in( F &fn, index_constant< I > i = index_constant< 0 >{} )
+    { return algorithms::call( mInlets, fn, i ); }
+
+    template< typename F, std::size_t I = 0 >
+    void each_in_with_index( F &fn, index_constant< I > i = index_constant< 0 >{} )
+    { return algorithms::call_with_index( mInlets, fn, i ); }
+
+    template< typename F, std::size_t I = 0 >
+    void each_in( F &&fn, index_constant< I > i = index_constant< 0 >{} )
+    { return algorithms::call( mInlets, fn, i ); }
+
+    template< typename F, std::size_t I = 0 >
+    void each_in_with_index( F &&fn, index_constant< I > i = index_constant< 0 >{} )
+    { return algorithms::call_with_index( mInlets, fn, i ); }
 
     inline inlets_container_type &inlets() { return mInlets; }
 
@@ -449,14 +461,21 @@ public:
     template< std::size_t I >
     outlet_type< I > const &out() const { return std::get< I >( mOutlets ); }
 
-    template< typename F >
-    void each_out( F &fn ) { return algorithms::call( mOutlets, fn ); }
-    template< typename F >
-    void each_out_with_index( F &fn ) { return algorithms::call_with_index( mOutlets, fn ); }
-    template< typename F >
-    void each_out( F &&fn ) { return algorithms::call( mOutlets, fn ); }
-    template< typename F >
-    void each_out_with_index( F &&fn ) { return algorithms::call_with_index( mOutlets, fn ); }
+    template< typename F, std::size_t I = 0 >
+    void each_out( F &fn, index_constant< I > i = index_constant< 0 >{} )
+    { return algorithms::call( mOutlets, fn, i ); }
+
+    template< typename F, std::size_t I = 0 >
+    void each_out_with_index( F &fn, index_constant< I > i = index_constant< 0 >{} )
+    { return algorithms::call_with_index( mOutlets, fn, i ); }
+
+    template< typename F, std::size_t I = 0 >
+    void each_out( F &&fn, index_constant< I > i = index_constant< 0 >{} )
+    { return algorithms::call( mOutlets, fn, i ); }
+
+    template< typename F, std::size_t I = 0 >
+    void each_out_with_index( F &&fn, index_constant< I > i = index_constant< 0 >{} )
+    { return algorithms::call_with_index( mOutlets, fn, i ); }
 
     inline outlets_container_type &outlets() { return mOutlets; }
 

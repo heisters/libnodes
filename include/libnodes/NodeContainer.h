@@ -125,8 +125,8 @@ template<
         std::size_t I = 0,
         typename... Tp
 >
-inline typename std::enable_if< I == sizeof...( Tp ) >::type
-call( std::tuple< Tp... > &, F & ) // Unused arguments are given no names.
+inline typename std::enable_if< I >= sizeof...( Tp ) >::type
+call( std::tuple< Tp... > &, F &, std::integral_constant< std::size_t, I > ) // Unused arguments are given no names.
 {}
 
 template<
@@ -135,9 +135,10 @@ template<
         typename... Tp
 >
 inline typename std::enable_if< I < sizeof...( Tp ) >::type
-call( std::tuple< Tp... > &t, F & fn ) {
+call( std::tuple< Tp... > &t, F & fn, std::integral_constant< std::size_t, I > i )
+{
     fn( std::get< I >( t ) );
-    call< F, I + 1, Tp... >( t, fn );
+    call( t, fn, std::integral_constant< std::size_t, I + 1 >{} );
 }
 
 
@@ -150,8 +151,8 @@ template<
         std::size_t I = 0,
         typename... Tp
 >
-inline typename std::enable_if< I == sizeof...( Tp ) >::type
-call_with_index( std::tuple< Tp... > &, F & ) // Unused arguments are given no names.
+inline typename std::enable_if< I >= sizeof...( Tp ) >::type
+call_with_index( std::tuple< Tp... > &, F &, std::integral_constant< std::size_t, I > ) // Unused arguments are given no names.
 {}
 
 template<
@@ -160,12 +161,11 @@ template<
         typename... Tp
 >
 inline typename std::enable_if< I < sizeof...( Tp ) >::type
-call_with_index( std::tuple< Tp... > &t, F & fn ) {
-    fn( std::get< I >( t ), I );
-    call_with_index< F, I + 1, Tp... >( t, fn );
+call_with_index( std::tuple< Tp... > &t, F & fn, std::integral_constant< std::size_t, I > i )
+{
+    fn( std::get< I >( t ), i );
+    call_with_index( t, fn, std::integral_constant< std::size_t, I + 1 >{} );
 }
-
-
 
 ///////////////////////////////////////////////////////////////////////////
 // std::array algorithms
@@ -174,21 +174,48 @@ call_with_index( std::tuple< Tp... > &t, F & fn ) {
 template<
         typename F,
         typename V,
-        std::size_t I
+        std::size_t N,
+        std::size_t I = 0
 >
-void call( std::array< V, I > &a, F & fn ) {
-    for ( auto &v : a ) fn( v );
-}
+inline typename std::enable_if< I >= N >::type
+call( std::array< V, N > &, F &, std::integral_constant< std::size_t, I > )
+{}
 
 template<
         typename F,
         typename V,
-        std::size_t I
+        std::size_t N,
+        std::size_t I = 0
 >
-void call_with_index( std::array< V, I > &a, F & fn )
+inline typename std::enable_if< I < N >::type
+call( std::array< V, N > &a, F & fn, std::integral_constant< std::size_t, I > i )
 {
-    std::size_t i = 0;
-    for ( auto &v : a ) fn( v, i++ );
+    fn( a.at( i ) );
+    call( a, fn, std::integral_constant< std::size_t, I + 1 >{} );
+}
+
+
+template<
+        typename F,
+        typename V,
+        std::size_t N,
+        std::size_t I = 0
+>
+inline typename std::enable_if< I >= N >::type
+call_with_index( std::array< V, N > &, F &, std::integral_constant< std::size_t, I > )
+{}
+
+template<
+        typename F,
+        typename V,
+        std::size_t N,
+        std::size_t I = 0
+>
+inline typename std::enable_if< I < N >::type
+call_with_index( std::array< V, N > &a, F & fn, std::integral_constant< std::size_t, I > i )
+{
+    fn( a.at( i ), i );
+    call_with_index( a, fn, std::integral_constant< std::size_t, I + 1 >{} );
 }
 
 }
