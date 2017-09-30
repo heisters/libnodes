@@ -34,6 +34,28 @@ SCENARIO( "With a single node", "[nodes]" ) {
     }
 }
 
+SCENARIO( "With a node with no inlets", "[nodes]" ) {
+    class No_Node : public Node< Inlets<>, Outlets< int > > {};
+    No_Node n;
+
+    THEN( "it compiles" ) {}
+
+    THEN( "it has a numeric id" ) {
+        REQUIRE( n.id() >= 0 );
+    }
+}
+
+SCENARIO( "With a node with no outlets", "[nodes]" ) {
+    class No_Node : public Node< Inlets< int >, Outlets<> > {};
+    No_Node n;
+
+    THEN( "it compiles" ) {}
+
+    THEN( "it has a numeric id" ) {
+        REQUIRE( n.id() >= 0 );
+    }
+}
+
 SCENARIO( "With a single node with uniform inlets", "[nodes]" ) {
     class ThreeInts_IONode : public Node< UniformInlets< int, 3 >, Outlets< int > > {
     public:

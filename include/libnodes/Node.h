@@ -4,11 +4,10 @@
 #include <tuple>
 #include <array>
 #include <type_traits>
+#include <iostream>
 #include "libnodes/nod_signal.h"
 #include "libnodes/connection_container.h"
 #include "libnodes/xlet_iterator.h"
-
-#include <iostream>
 
 namespace nodes {
 
@@ -418,10 +417,10 @@ public:
     using inlet_type = typename inlets_iterator_type::template type< I >;
 
     //! returns an iterator wrapping the inlets
-    inline inlets_iterator_type &inlets() { return mInletsIterator; }
+    inline inlets_iterator_type inlets() { return inlets_iterator_type{ mInlets }; }
 
     //! returns a const iterator wrapping the inlets
-    inline const inlets_iterator_type &inlets() const { return mInletsIterator; }
+    inline const inlets_iterator_type inlets() const { return inlets_iterator_type{ mInlets }; }
 
     //! returns the number of inlets at runtime
     inline std::size_t num_inlets() const { return in_size; }
@@ -435,7 +434,6 @@ public:
     inlet_type< I > const & in() const { return inlets().template get< I >(); }
 protected:
     inlets_container_type mInlets;
-    inlets_iterator_type mInletsIterator{ mInlets };
 };
 
 //! Provides a common interface for hetero- and homo-geneous outlets.
@@ -457,10 +455,10 @@ public:
     using outlet_type = typename outlets_iterator_type::template type< I >;
 
     //! returns an iterator wrapping the outlets
-    inline outlets_iterator_type &outlets() { return mOutletsIterator; }
+    inline outlets_iterator_type outlets() { return outlets_iterator_type{ mOutlets }; }
 
     //! returns a const iterator wrapping the outlets
-    inline const outlets_iterator_type &outlets() const { return mOutletsIterator; }
+    inline const outlets_iterator_type outlets() const { return outlets_iterator_type{ mOutlets }; }
 
     //! returns the number of outlets at runtime
     inline std::size_t num_outlets() const { return out_size; }
@@ -474,7 +472,6 @@ public:
     outlet_type< I > const & out() const { return outlets().template get< I >(); }
 protected:
     outlets_container_type mOutlets;
-    outlets_iterator_type mOutletsIterator{ mOutlets };
 };
 
 //! A collection of heterogeneous Inlets

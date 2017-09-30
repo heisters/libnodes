@@ -25,8 +25,8 @@ public:
 struct callable {
     TwoInts_IONode & n;
 
-    template< std::size_t I >
-    void operator()( Inlet< int > & inlet, std::integral_constant< std::size_t, I > i )
+    template< std::int64_t I >
+    void operator()( Inlet< int > & inlet, algorithms::index_constant< I > i )
     {
         inlet.onReceive( [&]( const int & received ) {
             n.out< I >().update( received );
@@ -100,18 +100,37 @@ SCENARIO( "With a single node with multiple inlets and outlets", "[nodes]" ) {
 
     THEN( "it is possible to skip an inlet" ) {
         int i = 0;
-        n.inlets().each( [&]( Inlet< int > & inlet ) {
+        n.inlets()[ from< 1 >{} ].each( [&]( Inlet< int > & inlet ) {
             i++;
-        }, index_constant< 1 >{} );
+        } );
 
         REQUIRE( i == 1 );
     }
 
     THEN( "it is possible to skip an outlet" ) {
         int i = 0;
-        n.outlets().each( [&]( Outlet< int > & outlet ) {
+        n.outlets()[ from< 1 >{} ].each( [&]( Outlet< int > & outlet ) {
             i++;
-        }, index_constant< 1 >{} );
+        } );
+
+        REQUIRE( i == 1 );
+    }
+
+
+    THEN( "it is possible to skip the last inlet" ) {
+        int i = 0;
+        n.inlets()[ from< 0 >::to< -2 >{} ].each( [&]( Inlet< int > & inlet ) {
+            i++;
+        } );
+
+        REQUIRE( i == 1 );
+    }
+
+    THEN( "it is possible to skip the last outlet" ) {
+        int i = 0;
+        n.outlets()[ from< 0 >::to< -2 >{} ].each( [&]( Outlet< int > & outlet ) {
+            i++;
+        } );
 
         REQUIRE( i == 1 );
     }

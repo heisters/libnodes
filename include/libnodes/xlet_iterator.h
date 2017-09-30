@@ -4,21 +4,38 @@
 
 namespace nodes {
 
-template< std::size_t I >
-using index_constant = typename std::integral_constant< std::size_t, I >;
 
 
-template< typename T >
+template< std::int64_t S = 0, std::int64_t E = -1 >
+struct xlet_selector {
+    algorithms::index_constant< S > start;
+    algorithms::index_constant< E > end;
+    static constexpr std::int64_t start_value = S;
+    static constexpr std::int64_t end_value = E;
+
+    template< std::int64_t Te >
+    using to = xlet_selector< S, Te >;
+};
+
+template< std::int64_t S = 0 >
+using from = xlet_selector< S >;
+
+
+template< typename T, std::int64_t S = 0, std::int64_t E = -1 >
 class xlet_iterator
 {
-    T & mXlets;
-
 public:
-    xlet_iterator( T & xlets ) : mXlets( xlets ) {};
-
-
     //! the underlying container for Xlets, either a std::tuple or std::array
     typedef T container_type;
+
+private:
+
+    xlet_selector< S, E >   mSelected;
+    container_type &        mXlets;
+
+public:
+    xlet_iterator( container_type & xlets ) : mXlets( xlets ) {};
+
 
     //! the number of Xlets
     static constexpr std::size_t size = std::tuple_size< container_type >::value;
@@ -36,26 +53,37 @@ public:
     type< I > const & get() const { return std::get< I >( mXlets ); }
 
     //! iterate over all xlets, starting at index \a i
-    template< typename F, std::size_t I = 0 >
-    void each( F &fn, index_constant< I > i = index_constant< 0 >{} )
-    { return algorithms::call( mXlets, fn, i ); }
+    template< typename F >
+    void each( F &fn )
+    { return algorithms::call( mXlets, fn, mSelected.start, mSelected.end ); }
 
     //! iterate over all xlets, starting at index \a i
-    template< typename F, std::size_t I = 0 >
-    void each( F &&fn, index_constant< I > i = index_constant< 0 >{} )
-    { return algorithms::call( mXlets, fn, i ); }
+    template< typename F >
+    void each( F &&fn )
+    { return algorithms::call( mXlets, fn, mSelected.start, mSelected.end ); }
 
     //! iterate over all xlets, passing the index of the index, starting at
     //! index \a i
-    template< typename F, std::size_t I = 0 >
-    void each_with_index( F &fn, index_constant< I > i = index_constant< 0 >{} )
-    { return algorithms::call_with_index( mXlets, fn, i ); }
+    template< typename F >
+    void each_with_index( F &fn )
+    { return algorithms::call_with_index( mXlets, fn, mSelected.start, mSelected.end ); }
 
     //! iterate over all xlets, passing the index of the index, starting at
     //! index \a i
-    template< typename F, std::size_t I = 0 >
-    void each_with_index( F &&fn, index_constant< I > i = index_constant< 0 >{} )
-    { return algorithms::call_with_index( mXlets, fn, i ); }
+    template< typename F >
+    void each_with_index( F &&fn )
+    { return algorithms::call_with_index( mXlets, fn, mSelected.start, mSelected.end ); }
+
+
+    template<
+            typename Ts,
+            typename Ti = xlet_iterator< container_type, Ts::start_value, Ts::end_value >
+    >
+    Ti operator[] ( const Ts & sel )
+    {
+        return Ti{ mXlets };
+    }
+
 };
 
 }

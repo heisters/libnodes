@@ -58,29 +58,39 @@ void update( connection_container< T > &connections ) {
 // std::tuple algorithms
 ///////////////////////////////////////////////////////////////////////////
 
+template< std::int64_t I >
+using index_constant = typename std::integral_constant< std::int64_t, I >;
+
+template< std::int64_t i, std::int64_t end, std::size_t size >
+struct is_iterable
+{
+    static constexpr bool test = i <= ( end < 0 ? (std::int64_t)size + end : end );
+};
+
 
 // call a function on each member of a tuple
 template<
         typename F,
-        std::size_t I = 0,
+        std::int64_t I = 0,
+        std::int64_t End = -1,
         typename... Tp
 >
-inline typename std::enable_if< I >= sizeof...( Tp ) >::type
-call( std::tuple< Tp... > &, F &, std::integral_constant< std::size_t, I > ) // Unused arguments are given no names.
+inline typename std::enable_if< ! is_iterable< I, End, sizeof...( Tp ) >::test >::type
+call( std::tuple< Tp... > &, F &, index_constant< I >, index_constant< End > ) // Unused arguments are given no names.
 {}
 
 template<
         typename F,
-        std::size_t I = 0,
+        std::int64_t I = 0,
+        std::int64_t End = -1,
         typename... Tp
 >
-inline typename std::enable_if< I < sizeof...( Tp ) >::type
-call( std::tuple< Tp... > &t, F & fn, std::integral_constant< std::size_t, I > i )
+inline typename std::enable_if< is_iterable< I, End, sizeof...( Tp ) >::test >::type
+call( std::tuple< Tp... > &t, F & fn, index_constant< I > i, index_constant< End > e )
 {
     fn( std::get< I >( t ) );
-    call( t, fn, std::integral_constant< std::size_t, I + 1 >{} );
+    call( t, fn, index_constant< I + 1 >{}, e );
 }
-
 
 // call a function on each member of a tuple, passing the member index as the second
 // parameter
@@ -88,23 +98,25 @@ call( std::tuple< Tp... > &t, F & fn, std::integral_constant< std::size_t, I > i
 
 template<
         typename F,
-        std::size_t I = 0,
+        std::int64_t I = 0,
+        std::int64_t End = -1,
         typename... Tp
 >
-inline typename std::enable_if< I >= sizeof...( Tp ) >::type
-call_with_index( std::tuple< Tp... > &, F &, std::integral_constant< std::size_t, I > ) // Unused arguments are given no names.
+inline typename std::enable_if< ! is_iterable< I, End, sizeof...( Tp ) >::test >::type
+call_with_index( std::tuple< Tp... > &, F &, index_constant< I >, index_constant< End > ) // Unused arguments are given no names.
 {}
 
 template<
         typename F,
-        std::size_t I = 0,
+        std::int64_t I = 0,
+        std::int64_t End = -1,
         typename... Tp
 >
-inline typename std::enable_if< I < sizeof...( Tp ) >::type
-call_with_index( std::tuple< Tp... > &t, F & fn, std::integral_constant< std::size_t, I > i )
+inline typename std::enable_if< is_iterable< I, End, sizeof...( Tp ) >::test >::type
+call_with_index( std::tuple< Tp... > &t, F & fn, index_constant< I > i, index_constant< End > e )
 {
     fn( std::get< I >( t ), i );
-    call_with_index( t, fn, std::integral_constant< std::size_t, I + 1 >{} );
+    call_with_index( t, fn, index_constant< I + 1 >{}, e );
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -115,23 +127,25 @@ template<
         typename F,
         typename V,
         std::size_t N,
-        std::size_t I = 0
+        std::int64_t I = 0,
+        std::int64_t End = -1
 >
-inline typename std::enable_if< I >= N >::type
-call( std::array< V, N > &, F &, std::integral_constant< std::size_t, I > )
+inline typename std::enable_if< ! is_iterable< I, End, N >::test >::type
+call( std::array< V, N > &, F &, index_constant< I >, index_constant< End > )
 {}
 
 template<
         typename F,
         typename V,
         std::size_t N,
-        std::size_t I = 0
+        std::int64_t I = 0,
+        std::int64_t End = -1
 >
-inline typename std::enable_if< I < N >::type
-call( std::array< V, N > &a, F & fn, std::integral_constant< std::size_t, I > i )
+inline typename std::enable_if< is_iterable< I, End, N >::test >::type
+call( std::array< V, N > &a, F & fn, index_constant< I > i, index_constant< End > e )
 {
     fn( a.at( i ) );
-    call( a, fn, std::integral_constant< std::size_t, I + 1 >{} );
+    call( a, fn, index_constant< I + 1 >{}, e );
 }
 
 
@@ -139,23 +153,25 @@ template<
         typename F,
         typename V,
         std::size_t N,
-        std::size_t I = 0
+        std::int64_t I = 0,
+        std::int64_t End = -1
 >
-inline typename std::enable_if< I >= N >::type
-call_with_index( std::array< V, N > &, F &, std::integral_constant< std::size_t, I > )
+inline typename std::enable_if< ! is_iterable< I, End, N >::test >::type
+call_with_index( std::array< V, N > &, F &, index_constant< I >, index_constant< End > )
 {}
 
 template<
         typename F,
         typename V,
         std::size_t N,
-        std::size_t I = 0
+        std::int64_t I = 0,
+        std::int64_t End = -1
 >
-inline typename std::enable_if< I < N >::type
-call_with_index( std::array< V, N > &a, F & fn, std::integral_constant< std::size_t, I > i )
+inline typename std::enable_if< is_iterable< I, End, N >::test >::type
+call_with_index( std::array< V, N > &a, F & fn, index_constant< I > i, index_constant< End > e )
 {
     fn( a.at( i ), i );
-    call_with_index( a, fn, std::integral_constant< std::size_t, I + 1 >{} );
+    call_with_index( a, fn, index_constant< I + 1 >{}, e );
 }
 
 }
