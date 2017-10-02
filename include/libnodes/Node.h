@@ -5,6 +5,7 @@
 #include <array>
 #include <type_traits>
 #include <iostream>
+#include <string>
 #include "libnodes/nod_signal.h"
 #include "libnodes/connection_container.h"
 #include "libnodes/xlet_iterator.h"
@@ -537,12 +538,12 @@ public:
     Node( const std::string &label = "" ) : NodeBase( label )
     {
         size_t i = 0;
-        this->inlets().template each( [&]( auto & in ) {
+        this->inlets().each( [&]( auto & in ) {
             in.setIndex( i++ );
         } );
         i = 0;
 
-        this->outlets().template each( [&]( auto & out ) {
+        this->outlets().each( [&]( auto & out ) {
             out.setIndex( i++ );
         } );
     }
