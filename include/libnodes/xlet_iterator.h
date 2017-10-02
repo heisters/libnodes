@@ -62,13 +62,13 @@ public:
     void each( F &&fn )
     { return algorithms::call( mXlets, fn, mSelected.start, mSelected.end ); }
 
-    //! iterate over all xlets, passing the index of the index, starting at
+    //! iterate over all xlets, passing the index of the element, starting at
     //! index \a i
     template< typename F >
     void each_with_index( F &fn )
     { return algorithms::call_with_index( mXlets, fn, mSelected.start, mSelected.end ); }
 
-    //! iterate over all xlets, passing the index of the index, starting at
+    //! iterate over all xlets, passing the index of the element, starting at
     //! index \a i
     template< typename F >
     void each_with_index( F &&fn )
@@ -83,6 +83,24 @@ public:
     {
         return Ti{ mXlets };
     }
+
+    //! returns an iterator to the first element, if the container type allows
+    template< typename I = container_type::iterator >
+    inline I begin() noexcept { return mXlets.begin(); }
+    //! returns a const iterator to the first element, if the container type allows
+    template< typename I = container_type::const_iterator >
+    inline I cbegin() noexcept { return mXlets.cbegin(); }
+
+    //! returns an iterator to the element following the last element, if the container type allows
+    template< typename I = container_type::iterator >
+    inline I end() noexcept { return mXlets.end(); }
+    //! returns a const iterator to the element following the last element, if the container type allows
+    template< typename I = container_type::const_iterator >
+    inline I cend() noexcept { return mXlets.cend(); }
+
+    //! Returns a reference to the element at specified location pos, with bounds checking if the container type allows
+    template< typename R = container_type::reference, typename S = typename container_type::size_type >
+    inline R at( S i ) { return mXlets.at( i ); }
 
 };
 
