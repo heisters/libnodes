@@ -400,7 +400,7 @@ private:
 };
 
 //! Provides a common interface for hetero- and homo-geneous inlets.
-template< typename T >
+template< typename T, typename Ti = xlet_iterator< T > >
 class AbstractInlets
 {
 public:
@@ -408,7 +408,7 @@ public:
     typedef T inlets_container_type;
 
     //! an iterator type for accessing the inlets
-    typedef xlet_iterator< T > inlets_iterator_type;
+    typedef Ti inlets_iterator_type;
 
     //! the number of inlets
     static constexpr std::size_t in_size = inlets_iterator_type::size;
@@ -438,7 +438,7 @@ protected:
 };
 
 //! Provides a common interface for hetero- and homo-geneous outlets.
-template< typename T >
+template< typename T, typename Ti = xlet_iterator< T > >
 class AbstractOutlets
 {
 public:
@@ -446,7 +446,7 @@ public:
     typedef T outlets_container_type;
 
     //! an iterator type for accessing the outlets
-    typedef xlet_iterator< T > outlets_iterator_type;
+    typedef Ti outlets_iterator_type;
 
     //! the number of outlets
     static constexpr std::size_t out_size = outlets_iterator_type::size;
@@ -484,8 +484,8 @@ public:
 };
 
 //! A collection of homogeneous Inlets
-template< typename T, std::size_t I >
-class UniformInlets : public AbstractInlets< std::array< Inlet< T >, I > >
+template< typename T, std::size_t I, typename A = std::array< Inlet< T >, I > >
+class UniformInlets : public AbstractInlets< A, uniform_xlet_iterator< A > >
 {
 public:
 
@@ -499,8 +499,8 @@ public:
 };
 
 //! A collection of homogeneous Outlets
-template< typename T, std::size_t I >
-class UniformOutlets : public AbstractOutlets< std::array< Outlet< T >, I > >
+template< typename T, std::size_t I, typename A = std::array< Outlet< T >, I > >
+class UniformOutlets : public AbstractOutlets< A, uniform_xlet_iterator< A > >
 {
 public:
 };
