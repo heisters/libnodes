@@ -85,21 +85,21 @@ public:
     }
 
     //! returns an iterator to the first element, if the container type allows
-    template< typename I = container_type::iterator >
+    template< typename I = typename container_type::iterator >
     inline I begin() noexcept { return mXlets.begin(); }
     //! returns a const iterator to the first element, if the container type allows
-    template< typename I = container_type::const_iterator >
+    template< typename I = typename container_type::const_iterator >
     inline I cbegin() noexcept { return mXlets.cbegin(); }
 
     //! returns an iterator to the element following the last element, if the container type allows
-    template< typename I = container_type::iterator >
+    template< typename I = typename container_type::iterator >
     inline I end() noexcept { return mXlets.end(); }
     //! returns a const iterator to the element following the last element, if the container type allows
-    template< typename I = container_type::const_iterator >
+    template< typename I = typename container_type::const_iterator >
     inline I cend() noexcept { return mXlets.cend(); }
 
     //! Returns a reference to the element at specified location pos, with bounds checking if the container type allows
-    template< typename R = container_type::reference, typename S = typename container_type::size_type >
+    template< typename R = typename container_type::reference, typename S = typename container_type::size_type >
     inline R at( S i ) { return mXlets.at( i ); }
 
 };
