@@ -1,5 +1,6 @@
 #include "catch.hpp"
 #include "libnodes/Node.h"
+#include "libnodes/ImplicitConversionNode.h"
 #include <iostream>
 
 using namespace nodes;
@@ -205,6 +206,35 @@ SCENARIO( "Connecting nodes", "[nodes]" ) {
         REQUIRE( n1.received0[0] == 1 );
         REQUIRE( n1.received1[0] == 2 );
         REQUIRE( n2.received1[0] == 1 );
+    }
+
+    WHEN( "the nodes are implicitly convertible" ) {
+        class Float_IONode : public Node< Inlets< float >, Outlets< float > > {
+        public:
+            Float_IONode( const string & label ) : node_type( label ) {
+                in< 0 >().onReceive( [&]( const float & f ) {
+                    received.push_back( f );
+                    this->out< 0 >().update( f );
+                } );
+            }
+
+            std::vector< float > received;
+        };
+
+        Float_IONode nf( "nf" );
+        THEN( "you can connect the nodes" ) {
+            node_convert< float, int > c;
+            nf >> c >> n1 >> n2;
+            nf.in< 0 >().receive( 1.1 );
+
+            REQUIRE( nf.received.size() == 1 );
+            REQUIRE( n1.received0.size() == 1 );
+            REQUIRE( n2.received0.size() == 1 );
+
+            REQUIRE( nf.received[0] == 1.1f );
+            REQUIRE( n1.received0[0] == 1 );
+            REQUIRE( n2.received0[0] == 1 );
+        }
     }
 }
 

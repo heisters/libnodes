@@ -554,6 +554,7 @@ public:
 
 namespace operators {
 
+//! Connect an outlet to an inlet
 template<
         typename To,
         typename Ti,
@@ -562,11 +563,11 @@ template<
 >
 inline const Ti & operator>>( To &outlet, Ti &inlet )
 {
-    static_assert( std::is_same< I, O >::value, "Cannot connect outlet to inlet" );
     outlet.connect( inlet );
     return inlet;
 }
 
+//! Connect a node ref's first outlet to another node ref's first inlet
 template<
         typename Ni,
         typename No,
@@ -577,11 +578,11 @@ template<
 >
 inline const ref< No > & operator>>( const ref< Ni > &input, const ref< No > &output )
 {
-    static_assert( std::is_same< To, Ti >::value, "Cannot connect input to output" );
     input->template out< Ii >() >> output->template in< Io >();
     return output;
 }
 
+//! Connect a node's first outlet to another node's first inlet
 template<
         typename Ni,
         typename No,
@@ -592,11 +593,11 @@ template<
 >
 inline No & operator>>( Ni &input, No &output )
 {
-    static_assert( std::is_same< To, Ti >::value, "Cannot connect input to output" );
     input.template out< Ii >() >> output.template in< Io >();
     return output;
 }
 
+//! Connect a node's first outlet to an inlet
 template<
         typename Ni,
         typename Ti,
@@ -606,7 +607,6 @@ template<
 >
 inline Ti & operator>>( Ni &input, Ti &inlet )
 {
-    static_assert( std::is_same< To, I >::value, "Cannot connect input to inlet" );
     input.template out< Ii >() >> inlet;
     return inlet;
 }
