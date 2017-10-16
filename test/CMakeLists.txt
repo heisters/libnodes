@@ -16,7 +16,7 @@ set(SOURCE_FILES
         "${PROJECT_SOURCE_DIR}/../src/libnodes/Node.cpp"
         "${PROJECT_SOURCE_DIR}/../include/libnodes/xlet_iterator.h"
         "${PROJECT_SOURCE_DIR}/../include/libnodes/ValueNode.h"
-        ../include/libnodes/BundleNode.h)
+        ../include/libnodes/BundleNode.h ../include/libnodes/operators.h)
 set(TEST_FILES
         "${PROJECT_SOURCE_DIR}/main.cpp"
         "${PROJECT_SOURCE_DIR}/test_nodes.cpp"

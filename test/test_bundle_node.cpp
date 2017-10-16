@@ -1,5 +1,6 @@
 #include "catch.hpp"
 #include "libnodes/Node.h"
+#include "libnodes/operators.h"
 #include "libnodes/BundleNode.h"
 #include "libnodes/ValueNode.h"
 
