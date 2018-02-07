@@ -346,6 +346,7 @@ protected:
 
 public:
     bool isConnected() const { return !mConnections.empty(); }
+    bool isConnectedTo( const outlet_type &out ) const { return mConnections.contains( out ); }
 
     std::size_t numConnections() const { return mConnections.size(); }
 

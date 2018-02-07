@@ -45,6 +45,12 @@ public:
         return false;
     }
 
+    bool contains( const V & member ) const {
+        return std::find_if( mSet.cbegin(), mSet.cend(), [&] ( auto & ref ) {
+            return ref.get() == member;
+        } ) != mSet.cend();
+    }
+
     typename vector_type::iterator begin() { return mVector.begin(); }
     typename vector_type::iterator end() { return mVector.end(); }
     typename vector_type::const_iterator cbegin() const { return mVector.cbegin(); }
